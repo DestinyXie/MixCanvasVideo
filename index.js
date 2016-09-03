@@ -56,6 +56,9 @@ CanvasVideoPlayer.prototype.bind = function () {
 
     me.video.addEventListener('play', me.videoPlayHandler = function () {
         me.playing = true;
+        if (me.isIos) {
+            me.loop();
+        }
         me.configs.onPlay && me.configs.onPlay();
     });
 
@@ -111,10 +114,6 @@ CanvasVideoPlayer.prototype.play = function () {
             return;
         }
         me.video.play();
-
-        if (me.isIos) {
-            me.loop();
-        }
     }, 100);
 
 
