@@ -1,4 +1,4 @@
-some utils.
+全屏播放视频，ios使用canvas，android使用全屏api
 
 ## Installation
 
