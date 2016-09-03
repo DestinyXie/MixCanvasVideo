@@ -63,10 +63,12 @@ CanvasVideoPlayer.prototype.bind = function () {
     });
 
     me.video.addEventListener('pause', me.videoPauseHandler = function () {
+        me.playing = false;
         me.configs.onPause && me.configs.onPause();
     });
 
     me.video.addEventListener('ended', me.videoEndHandler = function () {
+        me.playing = false;
         if (!me.isIos) {
             me.video.webkitExitFullScreen && me.video.webkitExitFullScreen();
             me.video.exitFullScreen && me.video.exitFullScreen();
