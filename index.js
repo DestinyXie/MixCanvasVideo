@@ -103,9 +103,6 @@ CanvasVideoPlayer.prototype.play = function () {
     if (!me.isIos) {
         me.video.style.display = 'block';
     }
-    else {
-        me.loop();
-    }
 
     // android的play方法有时候会卡住
     me.playInter = setInterval(function () {
@@ -114,6 +111,10 @@ CanvasVideoPlayer.prototype.play = function () {
             return;
         }
         me.video.play();
+
+        if (me.isIos) {
+            me.loop();
+        }
     }, 100);
 
 
