@@ -82,7 +82,6 @@ CanvasVideoPlayer.prototype.updateTimeline = function () {
     if (this.timeline) {
         this.timelinePassed.style.width = percentage + '%';
     }
-    console.log(percentage);
     this.configs.onUpdate && this.configs.onUpdate(percentage);
 };
 
