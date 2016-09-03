@@ -1,6 +1,6 @@
 {
   "name": "mix-canvas-video",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "show video in fullscreen, copyright mix corp.",
   "main": "index.js",
   "scripts": {
@@ -11,7 +11,7 @@
   ],
   "author": "DestinyXie",
   "dependencies": {
-    "mix-util": "^0.1.1"
+    "mix-util": "^0.1.0"
   },
   "repository": {
     "type": "git",

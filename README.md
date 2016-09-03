@@ -2,7 +2,7 @@
 
 ## Installation
 
-    npm install mix-canvas-video
+    npm i mix-canvas-video
 
 ## Usage
 
