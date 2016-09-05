@@ -78,6 +78,10 @@ CanvasVideoPlayer.prototype.bind = function () {
     });
 
     me.video.addEventListener('timeupdate', me.videoTimeUpdateHandler = me.updateTimeline.bind(this))
+
+    if (me.timeline) {
+        me.timeline.addEventListener('click', me.timelineClickHandler = me.timelineClick.bind(this));
+    }
 };
 
 // 更新播放百分比，如果传入进度条则更新进度条
@@ -137,23 +141,33 @@ CanvasVideoPlayer.prototype.playPause = function () {
     }
 };
 
+// 点击进度条调整进度，注意：进度条上层容器有zoom值时offseX的位置会有偏差
+CanvasVideoPlayer.prototype.timelineClick = function (evt) {
+    var offsetX = evt.offsetX;
+    var percentageTime = offsetX / this.timeline.offsetWidth;
+
+    if (percentageTime > 1) {
+        percentageTime = 1;
+    }
+    var toCurTime = this.video.duration * percentageTime;
+
+    this.video.currentTime = toCurTime;
+};
+
 CanvasVideoPlayer.prototype.drawFrame = function () {
     this.ctx.drawImage(this.video, 0, 0, this.width, this.height);
 };
 
 CanvasVideoPlayer.prototype.loop = function () {
-    var me = this;
-    if (me.playing) {
-        me.drawFrame();
-        me.animationFrame = util.nextFrame(function(){
-            me.loop();
-        });
+    if (this.playing) {
+        this.drawFrame();
+        this.animationFrame = util.nextFrame(this.loop.bind(this));
     }
     else {
-        util.cancelFrame(me.animationFrame);
+        util.cancelFrame(this.animationFrame);
     }
 
-    me.updateTimeline();
+    this.updateTimeline();
 };
 
 CanvasVideoPlayer.prototype.release = function () {
@@ -161,8 +175,12 @@ CanvasVideoPlayer.prototype.release = function () {
     this.video.removeEventListener('timeupdate', this.videoTimeUpdateHandler);
     this.video.removeEventListener('pause', this.videoPauseHandler);
     this.video.removeEventListener('ended', this.videoEndHandler);
+    if (this.timeline) {
+        this.timeline.removeEventListener('click', this.timelineClickHandler);
+    }
 
     util.cancelFrame(this.animationFrame);
 };
 
 module.exports = CanvasVideoPlayer;
+
