@@ -3,7 +3,7 @@ var util = require('mix-util');
 // canvas播放视频类
 function CanvasVideoPlayer(options) {
     this.configs   = util.extend({
-        framesPerSecond: 10,
+        overDelay: 0, // 结束时视频保持的时间
         hideVideo: true,
         width: 320,
         height: 520,
@@ -39,6 +39,7 @@ CanvasVideoPlayer.prototype.init = function () {
     this.video.load();
 
     this.isIos = util.browser.versions.ios;
+    this.androidScale = 1.095; // 隐藏播放框
 
     if (this.isIos) {
         if (this.configs.hideVideo) {
@@ -67,14 +68,9 @@ CanvasVideoPlayer.prototype.bind = function () {
         me.configs.onPause && me.configs.onPause();
     });
 
+    // todo: ended事件在重新播放时触发时机不科学
     me.video.addEventListener('ended', me.videoEndHandler = function () {
         me.playing = false;
-        if (!me.isIos) {
-            me.video.webkitExitFullScreen && me.video.webkitExitFullScreen();
-            me.video.exitFullScreen && me.video.exitFullScreen();
-            me.video.style.display = 'none';
-        }
-        me.configs.onEnd && me.configs.onEnd();
     });
 
     me.video.addEventListener('timeupdate', me.videoTimeUpdateHandler = me.updateTimeline.bind(this))
@@ -86,12 +82,26 @@ CanvasVideoPlayer.prototype.bind = function () {
 
 // 更新播放百分比，如果传入进度条则更新进度条
 CanvasVideoPlayer.prototype.updateTimeline = function () {
-    var percentage = (this.video.currentTime * 100 / this.video.duration).toFixed(2);
+    var me = this;
+    var percentage = (me.video.currentTime * 100 / me.video.duration).toFixed(2);
 
-    if (this.timeline) {
-        this.timelinePassed.style.width = percentage + '%';
+    if (me.timeline) {
+        me.timelinePassed.style.width = percentage + '%';
     }
-    this.configs.onUpdate && this.configs.onUpdate(percentage);
+    me.configs.onUpdate && me.configs.onUpdate(percentage);
+
+    // ended
+    if (percentage >= 100) {
+        setTimeout(function () {
+            if (!me.isIos) {
+                me.video.webkitExitFullScreen && me.video.webkitExitFullScreen();
+                me.video.exitFullScreen && me.video.exitFullScreen();
+                me.video.style.display = 'none';
+            }
+            // me.clearCanvas();
+            me.configs.onEnd && me.configs.onEnd();
+        }, me.configs.overDelay);
+    }
 };
 
 CanvasVideoPlayer.prototype.setCanvasSize = function () {
@@ -102,7 +112,7 @@ CanvasVideoPlayer.prototype.setCanvasSize = function () {
     this.canvas.setAttribute('height', this.height);
 };
 
-CanvasVideoPlayer.prototype.play = function () {
+CanvasVideoPlayer.prototype.play = function (isPlayPause) {
     var me = this;
     if (me.configs.videoSrc && !me.srcSeted) {
         me.video.src = me.configs.videoSrc;
@@ -111,16 +121,32 @@ CanvasVideoPlayer.prototype.play = function () {
 
     if (!me.isIos) {
         me.video.style.display = 'block';
-    }
 
-    // android的play方法有时候会卡住
-    me.playInter = setInterval(function () {
-        if (me.playing) {
-            clearInterval(me.playInter);
-            return;
+        me.video.style[util.setCssPrefix('transform')] = "scale(" + me.androidScale + ")";
+        me.video.style[util.setCssPrefix('transformOrigin')] = "center center";
+
+        // android的play方法有时候会卡住
+        me.playInter = setInterval(function () {
+            if (me.playing) {
+                me.played = true;
+                clearInterval(me.playInter);
+                return;
+            }
+            if (!isPlayPause && me.played) {
+                me.video.currentTime = 0;
+                // me.video.load();
+            }
+            me.video.play();
+        }, 200);
+    }
+    else {
+        if (!isPlayPause && me.played) {
+            me.video.currentTime = 0;
+            // me.video.load();
         }
         me.video.play();
-    }, 100);
+    }
+
 
 
     // audio todo
@@ -137,8 +163,14 @@ CanvasVideoPlayer.prototype.playPause = function () {
         this.pause();
     }
     else {
-        this.play();
+        this.play(true);
     }
+};
+
+CanvasVideoPlayer.prototype.stop = function () {
+    this.pause();
+    this.video.currentTime = 0;
+    this.clearCanvas();
 };
 
 // 点击进度条调整进度，注意：进度条上层容器有zoom值时offseX的位置会有偏差
@@ -156,6 +188,15 @@ CanvasVideoPlayer.prototype.timelineClick = function (evt) {
 
 CanvasVideoPlayer.prototype.drawFrame = function () {
     this.ctx.drawImage(this.video, 0, 0, this.width, this.height);
+};
+
+/**
+ * 清空canvas
+ * @param {string=} opt_color 清空默认颜色,默认黑色
+ */
+CanvasVideoPlayer.prototype.clearCanvas = function (opt_color) {
+    this.ctx.fillStyle = opt_color || '000000';
+    this.ctx.clearRect(0, 0, this.width, this.height);
 };
 
 CanvasVideoPlayer.prototype.loop = function () {

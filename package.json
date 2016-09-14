@@ -1,6 +1,6 @@
 {
   "name": "mix-canvas-video",
-  "version": "0.1.7",
+  "version": "0.1.9",
   "description": "show video in fullscreen, copyright mix corp.",
   "main": "index.js",
   "scripts": {
