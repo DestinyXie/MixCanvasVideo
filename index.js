@@ -126,18 +126,23 @@ CanvasVideoPlayer.prototype.play = function (isPlayPause) {
         me.video.style[util.setCssPrefix('transformOrigin')] = "center center";
 
         // android的play方法有时候会卡住
-        me.playInter = setInterval(function () {
-            if (me.playing) {
-                me.played = true;
-                clearInterval(me.playInter);
-                return;
-            }
-            if (!isPlayPause && me.played) {
-                me.video.currentTime = 0;
-                // me.video.load();
-            }
-            me.video.play();
-        }, 200);
+        // me.playInter = setInterval(function () {
+        //     if (me.playing) {
+        //         me.played = true;
+        //         clearInterval(me.playInter);
+        //         return;
+        //     }
+        //     if (!isPlayPause && me.played) {
+        //         me.video.currentTime = 0;
+        //         // me.video.load();
+        //     }
+        //     me.video.play();
+        // }, 200);
+        if (!isPlayPause && me.played) {
+            me.video.currentTime = 0;
+            // me.video.load();
+        }
+        me.video.play();
     }
     else {
         if (!isPlayPause && me.played) {
@@ -146,8 +151,6 @@ CanvasVideoPlayer.prototype.play = function (isPlayPause) {
         }
         me.video.play();
     }
-
-
 
     // audio todo
 };
