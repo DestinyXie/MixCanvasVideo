@@ -9,7 +9,8 @@ function CanvasVideoPlayer(options) {
         height: 520,
         audio: false,
         onEnd: false,
-        onUpdate: false
+        onUpdate: false,
+        noCanvas: false
     }, options, true);
 
     this.video          = this.configs.video;
@@ -27,7 +28,9 @@ function CanvasVideoPlayer(options) {
         return;
     }
 
-    this.ctx = this.canvas.getContext('2d');
+    if (!this.configs.noCanvas) {
+        this.ctx = this.canvas.getContext('2d');
+    }
 
     this.playing = false;
 
@@ -41,7 +44,7 @@ CanvasVideoPlayer.prototype.init = function () {
     this.isIos = util.browser.versions.ios;
     this.androidScale = 1.095; // 隐藏播放框
 
-    if (this.isIos) {
+    if (this.isIos && !this.configs.noCanvas) {
         if (this.configs.hideVideo) {
             this.video.style.display = 'none';
         }
@@ -57,7 +60,7 @@ CanvasVideoPlayer.prototype.bind = function () {
 
     me.video.addEventListener('play', me.videoPlayHandler = function () {
         me.playing = true;
-        if (me.isIos) {
+        if (me.isIos && !me.configs.noCanvas) {
             me.loop();
         }
         me.configs.onPlay && me.configs.onPlay();
@@ -73,6 +76,10 @@ CanvasVideoPlayer.prototype.bind = function () {
         me.playing = false;
     });
 
+    me.video.addEventListener('error', me.videoErrorHandler = function (err) {
+        console.log('video play error:' + JSON.stringify(err));
+    });
+
     me.video.addEventListener('timeupdate', me.videoTimeUpdateHandler = me.updateTimeline.bind(this))
 
     if (me.timeline) {
@@ -83,6 +90,7 @@ CanvasVideoPlayer.prototype.bind = function () {
 // 更新播放百分比，如果传入进度条则更新进度条
 CanvasVideoPlayer.prototype.updateTimeline = function () {
     var me = this;
+
     var percentage = (me.video.currentTime * 100 / me.video.duration).toFixed(2);
 
     if (me.timeline) {
@@ -173,7 +181,10 @@ CanvasVideoPlayer.prototype.playPause = function () {
 CanvasVideoPlayer.prototype.stop = function () {
     this.pause();
     this.video.currentTime = 0;
-    this.clearCanvas();
+
+    if (!this.configs.noCanvas) {
+        this.clearCanvas();
+    }
 };
 
 // 点击进度条调整进度，注意：进度条上层容器有zoom值时offseX的位置会有偏差
@@ -219,6 +230,7 @@ CanvasVideoPlayer.prototype.release = function () {
     this.video.removeEventListener('timeupdate', this.videoTimeUpdateHandler);
     this.video.removeEventListener('pause', this.videoPauseHandler);
     this.video.removeEventListener('ended', this.videoEndHandler);
+    this.video.removeEventListener('error', this.videoErrorHandler);
     if (this.timeline) {
         this.timeline.removeEventListener('click', this.timelineClickHandler);
     }
